@@ -1,0 +1,75 @@
+version: "3.8"
+services:
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mynetwork
+
+  user:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    restart: always
+    depends_on:
+      - "mongodb"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - mynetwork
+
+  order:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "9002:9002"
+    restart: always
+    depends_on:
+      - "mongodb"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - mynetwork
+
+  product:
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    ports:
+      - "9001:9001"
+    restart: always
+    depends_on:
+      - "mongodb"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - mynetwork
+
+  api-gatway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - user
+      - product
+      - order
+    networks:
+      - mynetwork
+
+volumes:
+  mongo-data:
+
+networks:
+  mynetwork:
+    driver: bridge
